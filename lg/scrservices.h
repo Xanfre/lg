@@ -163,6 +163,44 @@ interface IAIScrSrv : IScriptServiceBase
  *  	@ IAIManager::StartConversation(obj)
  */
 	STDMETHOD_(true_bool*,StartConversation)(true_bool &,int) PURE;
+#ifdef _NEWDARK
+/*** Stun - Interrupt an AI temporarily.
+ *  	= Bool - True if successful.
+ *  	: object - The AI.
+ *  	: cScrStr - Tags. Passed by value. Method will call IMalloc::Free.
+ *  	: cScrStr - Motion tags. Passed by value. Method will call IMalloc::Free.
+ *  	: float - Time in seconds.
+ */
+	STDMETHOD_(Bool,Stun)(object,cScrStr,cScrStr,float) PURE;
+/*** IsStunned - Is an AI unable to move?
+ *  	= Bool - True if the AI is immobile.
+ *  	: object - The AI.
+ */
+	STDMETHOD_(Bool,IsStunned)(object) PURE;
+/*** UnStun - Restore the AI state.
+ *  	= Bool - True if successful.
+ *  	: object - The AI.
+ */
+	STDMETHOD_(Bool,UnStun)(object) PURE;
+/*** Freeze - Make an AI immobile.
+ *  	= Bool - True if successful.
+ *  	: object - The AI.
+ *  	: float - Time in seconds.
+ *  	@ IAI::Freeze(time)
+ */
+	STDMETHOD_(Bool,Freeze)(object,float) PURE;
+/*** IsFrozen - Not used.
+ *  	= Bool - True if the AI is frozen.
+ *  	: object - The AI.
+ */
+	STDMETHOD_(Bool,IsFrozen)(object) PURE;
+/*** UnFreeze - Let an AI move again.
+ *  	= Bool - True if successful.
+ *  	: object - The AI.
+ *  	@ IAI::Unfreeze()
+ */
+	STDMETHOD_(Bool,UnFreeze)(object) PURE;
+#endif
 };
 DEFINE_IIDSTRUCT(IAIScrSrv,IID_IAIScriptService);
 
@@ -368,7 +406,7 @@ interface IDarkGameSrv : IScriptServiceBase
  *  	: float - Speed of the fade, in seconds. If negative, the screen will immediately return to full visibility.
  */
 	STDMETHOD(FadeToBlack)(float) PURE;
-#if (_DARKGAME == 2)
+#if (_DARKGAME == 2) || defined(_NEWDARK)
 /*** FoundObject - Rings the secret bell. Will only work once per object.
  *  	= long - Returns 0.
  *  	: int - object ID.
@@ -417,6 +455,15 @@ interface IDarkGameSrv : IScriptServiceBase
  *  	= int - The current mission number.
  */
 	STDMETHOD_(int,GetCurrentMission)(void) PURE;
+/*** RespawnPlayer - Respawn the player. Only does something in T2 multiplayer builds.
+ *  	= Bool - Returns true on success.
+ */
+	STDMETHOD_(Bool,RespawnPlayer)(void) PURE;
+/*** FadeIn - Gradually fade the screen in. Only does something in T2 multiplayer builds.
+ *  	= long - Returns 0 on success.
+ *  	: float - Speed of the fade, in seconds.
+ */
+	STDMETHOD(FadeIn)(float) PURE;
 #endif
 #endif
 };
@@ -925,6 +972,41 @@ interface INetworkingSrv : IScriptServiceBase
  */
 	STDMETHOD_(object*,Owner)(object &,const object &) PURE;
 #endif
+#ifdef _NEWDARK
+/*** CreateContentProxy - Creates a content proxy between the specified player and another object.
+ *  	= long - Returns 0.
+ *  	: const object & - The player object.
+ *  	: const object & - The contents object.
+ */
+	STDMETHOD(CreateContentProxy)(const object &,const object &) PURE;
+/*** AmHost - Queries whether the current client is the host of the multiplayer session.
+ *  	= Bool - True if client is the game host.
+ */
+	STDMETHOD_(Bool,AmHost)(void) PURE;
+/*** NumPlayers - Retrieves the number of players in the multiplayer session.
+ *  	= int - Number of players.
+ */
+	STDMETHOD_(int,NumPlayers)(void) PURE;
+/*** MyPlayerNum - Returns the local player's player number.
+ *  	= int - Player number, always 1 and up and is unique for each player in a session.
+ */
+	STDMETHOD_(int,MyPlayerNum)(void) PURE;
+/*** ObjToPlayerNum - Get the player number from a player object.
+ *  	= int - The player number.
+ *  	: const object & - The player object.
+ */
+	STDMETHOD_(int,ObjToPlayerNum)(const object &) PURE;
+/*** PlayerNumToObj - Get the player object from a player number.
+ *  	= object - The object ID of the player object. Aggregate return.
+ *  	: int - The player number.
+ */
+	STDMETHOD_(object*,PlayerNumToObj)(int) PURE;
+/*** GetPlayerName - Get the name of a player from a player object.
+ *  	= cScrStr - Player name. Returns a string with a length of zero if the player was not found.
+ *  	: const object & - The player object.
+ */
+	STDMETHOD_(cScrStr*,GetPlayerName)(const object &) PURE;
+#endif
 #endif
 };
 DEFINE_IIDSTRUCT(INetworkingSrv,IID_INetworkingScriptService);
@@ -1108,6 +1190,12 @@ interface IObjectSrv : IScriptServiceBase
  *  	: int - Number of the submodel, vhot, or joint if applicable.
  */
 	STDMETHOD_(true_bool*,CalcRelTransform)(true_bool&,object,object,cScrVec &,cScrVec &,int,int) PURE;
+/*** Archetype - Get the archetype from which the specified object descends.
+ *  	! Implemented by NewDark version 1.24 or later only.
+ *  	= object - The archetype of the specified object. Aggregate return.
+ *  	: object - The object from which to retreive the archetype.
+ */
+	STDMETHOD_(object*,Archetype)(object) PURE;
 #endif
 };
 DEFINE_IIDSTRUCT(IObjectSrv,IID_IObjectScriptService);
@@ -1191,7 +1279,7 @@ interface IPhysSrv : IScriptServiceBase
  *  	: object - The object to query.
  */
 	STDMETHOD_(float,GetGravity)(object) PURE;
-#if (_DARKGAME != 1)
+#if (_DARKGAME != 1) || defined(_NEWDARK)
 /*** HasPhysics - Check if an object has a physics model.
  *  	= Bool - True if the object has a physics model.
  *  	: object - The object to query.
@@ -1349,7 +1437,7 @@ interface IPropertySrv : IScriptServiceBase
  *  	: const cMultiParm & - The data to write.
  */
 	STDMETHOD(SetSimple)(object,const char *,const cMultiParm &) PURE;
-#if (_DARKGAME == 2) || (_DARKGAME == 3)
+#if (_DARKGAME == 2) || (_DARKGAME == 3) || defined(_NEWDARK)
 /*** SetLocal - Write a value into a field of a property without propogating across the network.
  *  	= long - Returns 0 on success.
  *  	: const char * - The property name.
@@ -1387,6 +1475,14 @@ interface IPropertySrv : IScriptServiceBase
  *  	@ IProperty::IsRelevant(obj)
  */
 	STDMETHOD_(Bool,Possessed)(object,const char *) PURE;
+#ifdef _NEWDARK
+/*** PossessedSimple - Query if object has a property set locally, ignoring inheritance from archetypes and metaproperties.
+ *  	= Bool - True if the property is on the object or its archetype.
+ *  	: object - The object to query.
+ *  	: const char * - The property name.
+ */
+	STDMETHOD_(Bool,PossessedSimple)(object,const char *) PURE;
+#endif
 };
 DEFINE_IIDSTRUCT(IPropertySrv,IID_IPropertyScriptService);
 
@@ -1446,6 +1542,34 @@ interface IQuestSrv : IScriptServiceBase
  *  	@ IQuestData::Delete(name)
  */
 	STDMETHOD_(Bool,Delete)(const char *) PURE;
+#ifdef _NEWDARK
+/*** BinSet - Set existing bin data chunk, creates it if necessary.
+ *  	: const char * - The quest bin data name.
+ *  	: const void * - Quest bin data to set.
+ *  	: int - Length of quest bin data.
+ *  	@ IQuestData::BinSet(name,data,length)
+ */
+	STDMETHOD(BinSet)(const char *,const void *,int) PURE;
+/*** BinGet - Get bin data, returns NULL if undefined.
+ *  	= const void * - Quest bin data.
+ *  	: const char * - The quest bin data name.
+ *  	: int * - Length of quest bin data.
+ *  	@ IQuestData::BinGet(name,length)
+ */
+	STDMETHOD_(const void*,BinGet)(const char *,int *) PURE;
+/*** BinExists - Determine whether a quest bin data chunk exists.
+ *  	= Bool - Returns true if quest bin data exists.
+ *  	: const char * - The quest bin data name.
+ *  	@ IQuestData::BinExists(name)
+ */
+	STDMETHOD_(Bool,BinExists)(const char *) PURE;
+/*** BinDelete - Delete quest bin data chunk.
+ *  	= Bool - Returns true if the quest bin data doesn't exist.
+ *  	: const char * - The quest bin data name.
+ *  	@ IQuestData::BinDelete(name)
+ */
+	STDMETHOD_(Bool,BinDelete)(const char *) PURE;
+#endif
 };
 DEFINE_IIDSTRUCT(IQuestSrv,IID_IQuestScriptService);
 
