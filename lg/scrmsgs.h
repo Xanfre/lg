@@ -36,7 +36,7 @@
 
 struct sScrMsgBase : IUnknown
 {
-	//virtual ~sScrMsgBase() { };
+	virtual ~sScrMsgBase() { };
 	sScrMsgBase() { };
 	STDMETHOD(QueryInterface)(REFIID riid, void** ppv);
 	STDMETHOD_(ulong,AddRef)() { return m_iRef.IncRef(); };
