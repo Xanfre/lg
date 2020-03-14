@@ -1437,7 +1437,7 @@ interface IPropertySrv : IScriptServiceBase
  *  	: const cMultiParm & - The data to write.
  */
 	STDMETHOD(SetSimple)(object,const char *,const cMultiParm &) PURE;
-#if (_DARKGAME == 2) || (_DARKGAME == 3) || defined(_NEWDARK)
+#if (_DARKGAME == 2) || (_DARKGAME == 3)
 /*** SetLocal - Write a value into a field of a property without propogating across the network.
  *  	= long - Returns 0 on success.
  *  	: const char * - The property name.
