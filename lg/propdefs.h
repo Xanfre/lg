@@ -23,13 +23,9 @@ struct Label
 DECLARE_GUID(ILabelProperty);
 DEFINE_PROPERTY_INTERFACE(ILabelProperty,Label*);
 
-enum eEAXType
-{
-};
-
 struct sAcoustics
 {
-	eEAXType Eax;
+	int Eax;
 	int Dampening;
 	int Height;
 };
@@ -156,6 +152,9 @@ enum eAIVisibility
 
 enum eAIWatchLinkKill
 {
+	kLinkKillNever,
+	kLinkKillOnTrigger,
+	kLinkKillOnComplete
 };
 
 struct sAIWatchPoint
